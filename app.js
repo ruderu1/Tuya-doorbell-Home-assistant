@@ -60,14 +60,18 @@ const decodeMessage = (data) => {
 
 const notifyHass = (payload) => {
     const endpointParts = config.hassUrl.split('/');
+    const protocol = endpointParts[0]; // 'http:' or 'https:'
+    const httpModule = protocol === 'https:' ? https : require('http'); // Choose the module based on protocol
+
     const options = {
-        protocol: endpointParts[0],
+        protocol: protocol,
         method: 'POST',
         hostname: endpointParts[2].split(':')[0],
-        port: endpointParts[2].split(':').length == 2 ? endpointParts[2].split(':')[1] : (endpointParts[0] == 'https:' ? 443 : 80),
+        port: endpointParts[2].split(':').length == 2 ? endpointParts[2].split(':')[1] : (protocol === 'https:' ? 443 : 80),
         path: `/${endpointParts.slice(3, endpointParts.length).join('/')}`,
     };
-    const request = https.request(options);
+
+    const request = httpModule.request(options); // Use the chosen module
     request.write(JSON.stringify(payload));
     request.end();
 }
